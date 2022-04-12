@@ -13,6 +13,7 @@ cryptography==36.0.2
 ecdsa==0.17.0
 esptool==3.3
 h11==0.13.0
+hexdump==3.3
 idna==3.3
 ifaddr==0.1.7
 marshmallow==3.15.0
@@ -20,6 +21,7 @@ packaging==21.3
 platformio==5.2.5
 pycparser==2.21
 pyelftools==0.28
+pyOpenSSL==22.0.0
 pyparsing==3.0.7
 PyQt5==5.15.6
 PyQt5-Qt5==5.15.2
