@@ -46,3 +46,5 @@ class Window(QMainWindow):
         "<p>Copyright &copy; k1f0</p>"\
         "</center>"
         QMessageBox.about(self, "About", text)
+        # was enabled for debugging/testing
+        #self.main.createCert()
