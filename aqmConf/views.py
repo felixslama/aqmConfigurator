@@ -26,11 +26,14 @@ class Window(QMainWindow):
         self.checkButton.clicked.connect(self.checkUpdate)
         self.aboutButton = QPushButton("About")
         self.aboutButton.clicked.connect(self.showCredits)
+        self.downloadButton = QPushButton("Download")
+        self.downloadButton.clicked.connect(self.downloadLatest)
         layout = QHBoxLayout()
         layout.addWidget(self.checkButton)
         layout.addWidget(self.buildButton)
         layout.addStretch()
         layout.addWidget(self.aboutButton)
+        layout.addWidget(self.downloadButton)
         self.layout.addLayout(layout)
     
     def buildRelease(self):
@@ -48,3 +51,6 @@ class Window(QMainWindow):
         QMessageBox.about(self, "About", text)
         # was enabled for debugging/testing
         #self.main.createCert()
+    
+    def downloadLatest(self):
+        self.main.download()
