@@ -1,17 +1,17 @@
-from ast import dump
-from encodings import utf_8
 from subprocess import Popen, PIPE, DEVNULL
-from tokenize import String
 from OpenSSL import crypto, SSL
 import hexdump
 import codecs
+import requests
+import zipfile
+import os
 from urllib import request
 
 class MainModel():
     def __init__(self, parent=None):
         self.baseURL = "https://github.com/felixslama/aqm"
 
-    def build(self, configPath, releasePath):
+    def build(self):
         print("Build")
         #process = Popen(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=PIPE, stderr=PIPE, stdin=DEVNULL,)
         #(out, err) = process.communicate()
@@ -19,11 +19,29 @@ class MainModel():
     def check(self):
         print("Check")
 
-    def download(self):
-        print("Check")
+    def download(self): # Note: latest folder needs to be deleted before downloading again
+        #print("Starting Download of latest release")
+        r = requests.get("https://api.github.com/repos/felixslama/aqm/releases/latest")
+        #print(r.json()["zipball_url"])
+        dr = requests.get(r.json()["zipball_url"],allow_redirects=True)
+        open("release.zip", 'wb').write(dr.content)
+        #print("Download finished")
+
+        with zipfile.ZipFile("release.zip", "r") as zip_ref:
+            zip_ref.extractall("release/")
+        #print("Extraction finished, deleting zip file")
+        os.remove("release.zip")
+        
+        #search for release folder and rename it
+        for file in os.listdir("release/"):
+            if file.startswith("felixslama"):
+                #print("Found file: " + file)
+                os.rename("release/" + file, "latest")
+                os.removedirs("release/")
+        #print("Renaming finished")
     
     def createCert(self):
-        #this function creates a key and certificate for the esp32 webserver and saves it as usable .h file 
+        # this function creates a key and certificate for the esp32 webserver and saves it as usable .h file 
         # create a key pair
         k = crypto.PKey()
         k.generate_key(crypto.TYPE_RSA, 2048)
