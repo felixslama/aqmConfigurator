@@ -1,20 +1,18 @@
-from subprocess import Popen, PIPE, DEVNULL
+from asyncio import subprocess
+import subprocess
+from sys import stdout
 from OpenSSL import crypto, SSL
 import hexdump
 import codecs
 import requests
 import zipfile
 import os
+import shutil
 from urllib import request
 
 class MainModel():
     def __init__(self, parent=None):
         self.baseURL = "https://github.com/felixslama/aqm"
-
-    def build(self):
-        print("Build")
-        #process = Popen(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=PIPE, stderr=PIPE, stdin=DEVNULL,)
-        #(out, err) = process.communicate()
 
     def check(self):
         print("Check")
@@ -96,4 +94,19 @@ class MainModel():
                 tf.write("};\n")
                 tf.write("unsigned int AQM_key_DER_len = " + str(len(key_list)) + ";")
 
-        
+    def build(self):
+        print("Build")
+        self.download()
+        self.createCert()
+        #move cert files to include folder
+        shutil.move("cert.h", "latest/software/include/")
+        shutil.move("key.h", "latest/software/include/")
+        shutil.copy("Credentials.h", "latest/software/include/")
+        #build firmware
+        releasePath = "latest/software"
+        configPath = "latest/software/platformio.ini"
+        #command = 'platformio run --environment esp32dev -d ' + workingDir + '-c ' + workingDir + '/platformio.ini'
+        worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=subprocess.PIPE)
+        print(worker.stdout.decode('utf-8'))
+
+        #os.removedirs("latest/") # delete release folder for next download
