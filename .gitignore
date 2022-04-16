@@ -4,3 +4,5 @@ __pycache__
 *.bin
 *.hex
 *.elf
+latest
+Credentials.h
