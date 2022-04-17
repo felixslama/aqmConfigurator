@@ -2,7 +2,6 @@ from asyncio import subprocess
 import subprocess
 from sys import stdout
 from OpenSSL import crypto, SSL
-import hexdump
 import codecs
 import requests
 import zipfile
@@ -18,6 +17,11 @@ class MainModel():
         print("Check")
 
     def download(self): # Note: latest folder needs to be deleted before downloading again
+        try:
+            shutil.rmtree("latest/")
+            shutil.rmtree("release/")
+        except:
+            pass
         #print("Starting Download of latest release")
         r = requests.get("https://api.github.com/repos/felixslama/aqm/releases/latest")
         #print(r.json()["zipball_url"])
@@ -93,20 +97,24 @@ class MainModel():
                     tf.write("\t" + key_list[i] + ",\n")
                 tf.write("};\n")
                 tf.write("unsigned int AQM_key_DER_len = " + str(len(key_list)) + ";")
-
+        os.remove("cert.der")
+        os.remove("key.der")
     def build(self):
         print("Build")
         self.download()
         self.createCert()
-        #move cert files to include folder
-        shutil.move("cert.h", "latest/software/include/")
-        shutil.move("key.h", "latest/software/include/")
-        shutil.copy("Credentials.h", "latest/software/include/")
-        #build firmware
-        releasePath = "latest/software"
-        configPath = "latest/software/platformio.ini"
-        #command = 'platformio run --environment esp32dev -d ' + workingDir + '-c ' + workingDir + '/platformio.ini'
-        worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=subprocess.PIPE)
-        print(worker.stdout.decode('utf-8'))
-
+        try:
+            #move cert files to include folder
+            shutil.move("cert.h", "latest/software/include/")
+            shutil.move("key.h", "latest/software/include/")
+            shutil.copy("Credentials.h", "latest/software/include/")
+            #build firmware
+            releasePath = "latest/software"
+            configPath = "latest/software/platformio.ini"
+            #command = 'platformio run --environment esp32dev -d ' + workingDir + '-c ' + workingDir + '/platformio.ini'
+            worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=subprocess.PIPE)
+            print(worker.stdout.decode('utf-8'))
+        except:
+            print("Build failed")
+            return False
         #os.removedirs("latest/") # delete release folder for next download

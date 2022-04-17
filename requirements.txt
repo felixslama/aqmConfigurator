@@ -10,7 +10,6 @@ click==8.1.2
 colorama==0.4.4
 cryptography==36.0.2
 h11==0.13.0
-hexdump==3.3
 idna==3.3
 ifaddr==0.1.7
 marshmallow==3.15.0
@@ -22,7 +21,7 @@ pyOpenSSL==22.0.0
 pyparsing==3.0.8
 PyQt5==5.15.6
 PyQt5-Qt5==5.15.2
-PyQt5-sip==12.9.1
+PyQt5-sip==12.10.1
 pyserial==3.5
 requests==2.27.1
 semantic-version==2.9.0

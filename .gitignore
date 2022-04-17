@@ -6,3 +6,6 @@ __pycache__
 *.elf
 latest
 Credentials.h
+*.der
+*.spec
+build/
