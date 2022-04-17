@@ -9,3 +9,5 @@ Credentials.h
 *.der
 *.spec
 build/
+dist/
+.exe
