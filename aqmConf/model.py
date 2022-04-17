@@ -1,12 +1,14 @@
 from asyncio import subprocess
+from random import randint
 import subprocess
-from sys import stdout
+import sys
 from OpenSSL import crypto, SSL
 import codecs
 import requests
 import zipfile
 import os
 import shutil
+import platformio
 from urllib import request
 
 class MainModel():
@@ -17,6 +19,9 @@ class MainModel():
         print("Check")
 
     def download(self): # Note: latest folder needs to be deleted before downloading again
+        #downloadplatformio = subprocess.run([sys.executable, "-m", "pip", "install", "platformio"],stdout=subprocess.PIPE)
+        #print(downloadplatformio.stdout.decode('utf-8'))
+        #print("postdl")
         try:
             shutil.rmtree("latest/")
             shutil.rmtree("release/")
@@ -56,7 +61,7 @@ class MainModel():
         cert.get_subject().O = "AETHERENGINEERING"
         cert.get_subject().OU = "aqm"
         cert.get_subject().CN = "aqm"
-        cert.set_serial_number(1000)
+        cert.set_serial_number(randint(1,1000000))
         cert.gmtime_adj_notBefore(0)
         cert.gmtime_adj_notAfter(10*365*24*60*60)
         cert.set_issuer(cert.get_subject())
@@ -101,6 +106,7 @@ class MainModel():
         os.remove("key.der")
     def build(self):
         print("Build")
+        print(platformio.VERSION)
         self.download()
         self.createCert()
         try:
@@ -108,13 +114,15 @@ class MainModel():
             shutil.move("cert.h", "latest/software/include/")
             shutil.move("key.h", "latest/software/include/")
             shutil.copy("Credentials.h", "latest/software/include/")
+            print("move done")
             #build firmware
-            releasePath = "latest/software"
-            configPath = "latest/software/platformio.ini"
+            releasePath = 'latest\software'
+            configPath = 'latest\software\platformio.ini'
             #command = 'platformio run --environment esp32dev -d ' + workingDir + '-c ' + workingDir + '/platformio.ini'
-            worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath)], stdout=subprocess.PIPE)
+            worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
             print(worker.stdout.decode('utf-8'))
-        except:
+        except Exception as e:
             print("Build failed")
+            print(e)
             return False
-        #os.removedirs("latest/") # delete release folder for next download
+        shutil.rmtree("latest/") # delete release folder for next download
