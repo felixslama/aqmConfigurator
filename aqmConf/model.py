@@ -27,25 +27,25 @@ class MainModel():
             shutil.rmtree("release/")
         except:
             pass
-        #print("Starting Download of latest release")
+        print("Starting Download of latest release")
         r = requests.get("https://api.github.com/repos/felixslama/aqm/releases/latest")
-        #print(r.json()["zipball_url"])
+        print(r.json()["zipball_url"])
         dr = requests.get(r.json()["zipball_url"],allow_redirects=True)
         open("release.zip", 'wb').write(dr.content)
-        #print("Download finished")
+        print("Download finished")
 
         with zipfile.ZipFile("release.zip", "r") as zip_ref:
             zip_ref.extractall("release/")
-        #print("Extraction finished, deleting zip file")
+        print("Extraction finished, deleting zip file")
         os.remove("release.zip")
         
         #search for release folder and rename it
         for file in os.listdir("release/"):
             if file.startswith("felixslama"):
-                #print("Found file: " + file)
+                print("Found file: " + file)
                 os.rename("release/" + file, "latest")
                 os.removedirs("release/")
-        #print("Renaming finished")
+        print("Renaming finished")
     
     def createCert(self):
         # this function creates a key and certificate for the esp32 webserver and saves it as usable .h file 
@@ -107,22 +107,32 @@ class MainModel():
     def build(self):
         print("Build")
         print(platformio.VERSION)
-        self.download()
-        self.createCert()
         try:
             #move cert files to include folder
-            shutil.move("cert.h", "latest/software/include/")
-            shutil.move("key.h", "latest/software/include/")
-            shutil.copy("Credentials.h", "latest/software/include/")
-            print("move done")
+            #print("move done")
             #build firmware
-            releasePath = 'latest\software'
-            configPath = 'latest\software\platformio.ini'
-            #command = 'platformio run --environment esp32dev -d ' + workingDir + '-c ' + workingDir + '/platformio.ini'
-            worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
+            #releasePath = 'latest\software'
+            #configPath = 'latest\software\platformio.ini'
+            releasePath = 'latest/software'
+            configPath = 'latest/software/platformio.ini'
+            if not os.path.isdir(releasePath + "/.pio"):
+                print("No .pio folder found, building firmware")
+                self.download()
+                self.createCert()
+                shutil.move(os.path.join("cert.h"), os.path.join("latest/software/include/", "cert.h"))
+                shutil.move(os.path.join("key.h"), os.path.join("latest/software/include/", "key.h"))
+                shutil.copy(os.path.join("Credentials.h"), os.path.join("latest/software/include/", "Credentials.h"))
+                worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
+            else:
+                print("Found .pio folder, skipping build, flashing firmware")
+                self.createCert()
+                shutil.move(os.path.join("cert.h"), os.path.join("latest/software/include/", "cert.h"))
+                shutil.move(os.path.join("key.h"), os.path.join("latest/software/include/", "key.h"))
+                shutil.copy(os.path.join("Credentials.h"), os.path.join("latest/software/include/", "Credentials.h"))
+                worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
             print(worker.stdout.decode('utf-8'))
         except Exception as e:
             print("Build failed")
             print(e)
             return False
-        shutil.rmtree("latest/") # delete release folder for next download
+        #shutil.rmtree("latest/") # delete release folder for next download

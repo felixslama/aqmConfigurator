@@ -22,18 +22,18 @@ class Window(QMainWindow):
     def setupUI(self):
         self.buildButton = QPushButton("Build")
         self.buildButton.clicked.connect(self.buildRelease)
-        self.checkButton = QPushButton("Check")
-        self.checkButton.clicked.connect(self.checkUpdate)
+        #self.checkButton = QPushButton("Check")
+        #self.checkButton.clicked.connect(self.checkUpdate)
         self.aboutButton = QPushButton("About")
         self.aboutButton.clicked.connect(self.showCredits)
-        self.downloadButton = QPushButton("Download")
-        self.downloadButton.clicked.connect(self.downloadLatest)
+        #self.downloadButton = QPushButton("Download")
+        #self.downloadButton.clicked.connect(self.downloadLatest)
         layout = QHBoxLayout()
-        layout.addWidget(self.checkButton)
+        #layout.addWidget(self.checkButton)
         layout.addWidget(self.buildButton)
         layout.addStretch()
         layout.addWidget(self.aboutButton)
-        layout.addWidget(self.downloadButton)
+        #layout.addWidget(self.downloadButton)
         self.layout.addLayout(layout)
     
     def buildRelease(self):
@@ -46,7 +46,7 @@ class Window(QMainWindow):
         text = f"<center>"\
         "<h1>AQM-Configurator</h1>"\
         "<p>Configurator and Builder</p>"\
-        "<p>Copyright &copy; k1f0</p>"\
+        "<p>Copyright &copy; f1re & k1f0</p>"\
         "</center>"
         QMessageBox.about(self, "About", text)
         # was enabled for debugging/testing
