@@ -9,7 +9,7 @@
 ### 1. Download the latest [Python installer](https://www.python.org/downloads/)
    1. Open the installer file
    2. __Make sure you check the "Add Python 3.x to PATH" box__
-   3. Press the "Install Now" Button (administrator privileges requiered)
+   3. Press the "Install Now" Button (administrator privileges required)
    4. Allow changes through python
    5. Press the "Disable Path length limit" Button
    6. Close the Installer
