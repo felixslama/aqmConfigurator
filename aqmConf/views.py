@@ -2,10 +2,13 @@ from .model import MainModel
 from PyQt5.QtWidgets import (
     QMainWindow,
     QVBoxLayout,
+    QHBoxLayout,
     QWidget,
     QHBoxLayout,
     QPushButton,
-    QMessageBox
+    QMessageBox,
+    QLineEdit,
+    QLabel
 )
 
 class Window(QMainWindow):
@@ -18,29 +21,43 @@ class Window(QMainWindow):
         self.centralWidget.setLayout(self.layout)
         self.main = MainModel()
         self.setupUI()
-    
+
     def setupUI(self):
         self.buildButton = QPushButton("Build")
         self.buildButton.clicked.connect(self.buildRelease)
-        #self.checkButton = QPushButton("Check")
-        #self.checkButton.clicked.connect(self.checkUpdate)
+        self.submitButton = QPushButton("Submit")
+        self.submitButton.clicked.connect(self.submitInput)
         self.aboutButton = QPushButton("About")
         self.aboutButton.clicked.connect(self.showCredits)
-        #self.downloadButton = QPushButton("Download")
-        #self.downloadButton.clicked.connect(self.downloadLatest)
-        layout = QHBoxLayout()
-        #layout.addWidget(self.checkButton)
-        layout.addWidget(self.buildButton)
-        layout.addStretch()
-        layout.addWidget(self.aboutButton)
-        #layout.addWidget(self.downloadButton)
-        self.layout.addLayout(layout)
-    
+        self.urlLabel = QLabel(self)
+        self.urlLabel.setText('URL:')
+        self.urlInput = QLineEdit(self)
+        self.tokenLabel = QLabel(self)
+        self.tokenLabel.setText('Token:')
+        self.tokenInput = QLineEdit(self)
+        inputLayout = QVBoxLayout()
+        inputLayout.addStretch()
+        inputLayout.addWidget(self.urlLabel)
+        inputLayout.addWidget(self.urlInput)
+        inputLayout.addWidget(self.tokenLabel)
+        inputLayout.addWidget(self.tokenInput)
+        inputLayout.addWidget(self.submitButton)
+        inputLayout.addStretch()
+        buttonLayout = QHBoxLayout()
+        buttonLayout.addWidget(self.buildButton)
+        buttonLayout.addStretch()
+        buttonLayout.addWidget(self.aboutButton)
+        self.layout.addLayout(inputLayout)
+        self.layout.addLayout(buttonLayout)
+
     def buildRelease(self):
         self.main.build()
 
-    def checkUpdate(self):
-        self.main.check()
+    def submitInput(self):
+        if self.tokenInput.text().isdigit():
+            self.main.submit(self.urlInput.text(), self.tokenInput.text())
+        else:
+            QMessageBox.critical(self, "Error", "Token has to be numeric!")
 
     def showCredits(self):
         text = f"<center>"\
