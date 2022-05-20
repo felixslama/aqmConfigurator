@@ -15,8 +15,9 @@ class MainModel():
     def __init__(self, parent=None):
         self.baseURL = "https://github.com/felixslama/aqm"
 
-    def check(self):
-        print("Check")
+    def submit(self, url, token):
+        fullURL = f"{url}?otp={token}"
+        print(f"Submitted {fullURL}")
 
     def download(self): # Note: latest folder needs to be deleted before downloading again
         #downloadplatformio = subprocess.run([sys.executable, "-m", "pip", "install", "platformio"],stdout=subprocess.PIPE)
