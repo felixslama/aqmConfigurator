@@ -29,16 +29,11 @@ class Window(QMainWindow):
         self.submitButton.clicked.connect(self.submitInput)
         self.aboutButton = QPushButton("About")
         self.aboutButton.clicked.connect(self.showCredits)
-        self.urlLabel = QLabel(self)
-        self.urlLabel.setText('URL:')
-        self.urlInput = QLineEdit(self)
         self.tokenLabel = QLabel(self)
-        self.tokenLabel.setText('Token:')
+        self.tokenLabel.setText('OTP-Token:')
         self.tokenInput = QLineEdit(self)
         inputLayout = QVBoxLayout()
         inputLayout.addStretch()
-        inputLayout.addWidget(self.urlLabel)
-        inputLayout.addWidget(self.urlInput)
         inputLayout.addWidget(self.tokenLabel)
         inputLayout.addWidget(self.tokenInput)
         inputLayout.addWidget(self.submitButton)
@@ -55,7 +50,11 @@ class Window(QMainWindow):
 
     def submitInput(self):
         if self.tokenInput.text().isdigit():
-            self.main.submit(self.urlInput.text(), self.tokenInput.text())
+            submitRes = self.main.submit(self.tokenInput.text())
+            if submitRes:
+                QMessageBox.information(self, "Success", "Credentials received!")
+            else:
+                QMessageBox.critical(self, "Error", "Token invalid or expired!")
         else:
             QMessageBox.critical(self, "Error", "Token has to be numeric!")
 
@@ -66,8 +65,6 @@ class Window(QMainWindow):
         "<p>Copyright &copy; f1re & k1f0</p>"\
         "</center>"
         QMessageBox.about(self, "About", text)
-        # was enabled for debugging/testing
-        #self.main.createCert()
-    
+
     def downloadLatest(self):
         self.main.download()
