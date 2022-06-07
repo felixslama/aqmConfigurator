@@ -1,23 +1,39 @@
 from asyncio import subprocess
+from lib2to3.pgen2.token import NEWLINE
 from random import randint
 import subprocess
-import sys
-from OpenSSL import crypto, SSL
+from OpenSSL import crypto
 import codecs
 import requests
 import zipfile
 import os
 import shutil
 import platformio
-from urllib import request
+import requests
+import json
 
 class MainModel():
     def __init__(self, parent=None):
         self.baseURL = "https://github.com/felixslama/aqm"
+        self.baseFetchURL = "https://aqmcredman.azurewebsites.net/api/aqmcredman"
 
-    def submit(self, url, token):
-        fullURL = f"{url}?otp={token}"
-        print(f"Submitted {fullURL}")
+    def submit(self, token):
+        fullURL = f"{self.baseFetchURL}?otp={token}"
+        response = requests.get(fullURL)
+        if response.status_code == 200:
+            jsonCreds = f"{response.json()}"
+            jsonCreds = jsonCreds.replace("'", '"')
+            decodedJson = json.loads(jsonCreds)
+            if os.path.isfile("Credentials.h"):
+                os.remove("Credentials.h")
+            with open("Credentials.h", "w") as f:
+                for k, v in decodedJson.items():
+                    f.write(f"const char* {k} = {v};\n")
+                f.close()
+            return True
+        else:
+            print(f"Error: {response.status_code}")
+            return False
 
     def download(self): # Note: latest folder needs to be deleted before downloading again
         #downloadplatformio = subprocess.run([sys.executable, "-m", "pip", "install", "platformio"],stdout=subprocess.PIPE)
@@ -109,11 +125,6 @@ class MainModel():
         print("Build")
         print(platformio.VERSION)
         try:
-            #move cert files to include folder
-            #print("move done")
-            #build firmware
-            #releasePath = 'latest\software'
-            #configPath = 'latest\software\platformio.ini'
             releasePath = 'latest/software'
             configPath = 'latest/software/platformio.ini'
             if not os.path.isdir(releasePath + "/.pio"):
