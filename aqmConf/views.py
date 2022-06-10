@@ -14,43 +14,44 @@ from PyQt5.QtWidgets import (
 class Window(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("aqmConfigurator")
-        self.centralWidget = QWidget()
-        self.setCentralWidget(self.centralWidget)
         self.layout = QVBoxLayout()
-        self.centralWidget.setLayout(self.layout)
+        self.button_layout = QHBoxLayout()
+        self.input_layout = QHBoxLayout()
+        self.setWindowTitle("aqmConfigurator")
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
+        self.central_widget.setLayout(self.layout)
         self.main = MainModel()
-        self.setupUI()
+        self.setup_UI()
 
-    def setupUI(self):
-        self.buildButton = QPushButton("Build")
-        self.buildButton.clicked.connect(self.buildRelease)
-        self.submitButton = QPushButton("Submit")
-        self.submitButton.clicked.connect(self.submitInput)
-        self.aboutButton = QPushButton("About")
-        self.aboutButton.clicked.connect(self.showCredits)
-        self.tokenLabel = QLabel(self)
-        self.tokenLabel.setText('OTP-Token:')
-        self.tokenInput = QLineEdit(self)
-        inputLayout = QVBoxLayout()
-        inputLayout.addStretch()
-        inputLayout.addWidget(self.tokenLabel)
-        inputLayout.addWidget(self.tokenInput)
-        inputLayout.addWidget(self.submitButton)
-        inputLayout.addStretch()
-        buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(self.buildButton)
-        buttonLayout.addStretch()
-        buttonLayout.addWidget(self.aboutButton)
-        self.layout.addLayout(inputLayout)
-        self.layout.addLayout(buttonLayout)
+    def setup_UI(self):
+        self.build_button = QPushButton("Build")
+        self.build_button.clicked.connect(self.build_release)
+        self.submit_button = QPushButton("Submit")
+        self.submit_button.clicked.connect(self.submit_input)
+        self.about_button = QPushButton("About")
+        self.about_button.clicked.connect(self.show_credits)
+        self.token_label = QLabel(self)
+        self.token_label.setText('OTP-Token:')
+        self.token_input = QLineEdit(self)
+        self.input_layout.addStretch()
+        self.input_layout.addWidget(self.token_label)
+        self.input_layout.addWidget(self.token_input)
+        self.input_layout.addWidget(self.submit_button)
+        self.input_layout.addStretch()
+        self.button_layout.addStretch()
+        self.button_layout.addWidget(self.build_button)
+        self.button_layout.addWidget(self.about_button)
+        self.button_layout.addStretch()
+        self.layout.addLayout(self.input_layout)
+        self.layout.addLayout(self.button_layout)
 
-    def buildRelease(self):
+    def build_release(self):
         self.main.build()
 
-    def submitInput(self):
-        if self.tokenInput.text().isdigit():
-            submitRes = self.main.submit(self.tokenInput.text())
+    def submit_input(self):
+        if self.token_input.text().isdigit():
+            submitRes = self.main.submit(self.token_input.text())
             if submitRes:
                 QMessageBox.information(self, "Success", "Credentials received!")
             else:
@@ -58,7 +59,7 @@ class Window(QMainWindow):
         else:
             QMessageBox.critical(self, "Error", "Token has to be numeric!")
 
-    def showCredits(self):
+    def show_credits(self):
         text = f"<center>"\
         "<h1>AQM-Configurator</h1>"\
         "<p>Configurator and Builder</p>"\
@@ -66,5 +67,5 @@ class Window(QMainWindow):
         "</center>"
         QMessageBox.about(self, "About", text)
 
-    def downloadLatest(self):
+    def download_latest(self):
         self.main.download()

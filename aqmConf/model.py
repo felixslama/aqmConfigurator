@@ -1,76 +1,67 @@
-from asyncio import subprocess
-from lib2to3.pgen2.token import NEWLINE
-from random import randint
-import subprocess
-from OpenSSL import crypto
 import codecs
 import requests
 import zipfile
 import os
 import shutil
-import platformio
 import requests
 import json
+import subprocess
+from asyncio import subprocess
+from random import randint
+from OpenSSL import crypto
 
 class MainModel():
     def __init__(self, parent=None):
-        self.baseURL = "https://github.com/felixslama/aqm"
-        self.baseFetchURL = "https://aqmcredman.azurewebsites.net/api/aqmcredman"
-
+        self.base_URL = "https://github.com/felixslama/aqm"
+        self.base_fetch_URL = "https://aqmcredman.azurewebsites.net/api/aqmcredman"
+        self.base_release_path = "latest/software/"
+        self.release_URL = "https://api.github.com/repos/felixslama/aqm/releases/latest"
+    
     def submit(self, token):
-        fullURL = f"{self.baseFetchURL}?otp={token}"
-        response = requests.get(fullURL)
+        full_URL = f"{self.base_fetch_URL}?otp={token}"
+        response = requests.get(full_URL)
+        # if API-Fetch was a Success, write to Header File
         if response.status_code == 200:
-            jsonCreds = f"{response.json()}"
-            jsonCreds = jsonCreds.replace("'", '"')
-            decodedJson = json.loads(jsonCreds)
+            json_creds = f"{response.json()}"
+            # replace with double quotes because json lib doesnt like single quotes
+            json_creds = json_creds.replace("'", '"')
+            decoded_json = json.loads(json_creds)
+            # delete previous Header File
             if os.path.isfile("Credentials.h"):
                 os.remove("Credentials.h")
             with open("Credentials.h", "w") as f:
-                for k, v in decodedJson.items():
+                for k, v in decoded_json.items():
                     f.write(f"const char* {k} = {v};\n")
                 f.close()
             return True
         else:
             print(f"Error: {response.status_code}")
             return False
-
-    def download(self): # Note: latest folder needs to be deleted before downloading again
-        #downloadplatformio = subprocess.run([sys.executable, "-m", "pip", "install", "platformio"],stdout=subprocess.PIPE)
-        #print(downloadplatformio.stdout.decode('utf-8'))
-        #print("postdl")
+    
+    def download(self):
         try:
             shutil.rmtree("latest/")
             shutil.rmtree("release/")
         except:
             pass
-        print("Starting Download of latest release")
-        r = requests.get("https://api.github.com/repos/felixslama/aqm/releases/latest")
-        print(r.json()["zipball_url"])
-        dr = requests.get(r.json()["zipball_url"],allow_redirects=True)
-        open("release.zip", 'wb').write(dr.content)
-        print("Download finished")
-
+        response = requests.get(f"{self.release_URL}")
+        download_request = requests.get(response.json()["zipball_url"],allow_redirects=True)
+        open("release.zip", 'wb').write(download_request.content)
         with zipfile.ZipFile("release.zip", "r") as zip_ref:
             zip_ref.extractall("release/")
-        print("Extraction finished, deleting zip file")
         os.remove("release.zip")
-        
         #search for release folder and rename it
         for file in os.listdir("release/"):
             if file.startswith("felixslama"):
                 print("Found file: " + file)
                 os.rename("release/" + file, "latest")
                 os.removedirs("release/")
-        print("Renaming finished")
     
     def createCert(self):
-        # this function creates a key and certificate for the esp32 webserver and saves it as usable .h file 
-        # create a key pair
+        # create a Key Pair
         k = crypto.PKey()
         k.generate_key(crypto.TYPE_RSA, 2048)
-
-        # create a self-signed cert
+        # create a self-signed Cert
         cert = crypto.X509()
         cert.get_subject().C = "AT"
         cert.get_subject().ST = "CA"
@@ -84,67 +75,76 @@ class MainModel():
         cert.set_issuer(cert.get_subject())
         cert.set_pubkey(k)
         cert.sign(k, 'sha256')
-
-        # create cert in der format
+        # create Cert in der-Format
         with open("cert.der", "wb") as f:
             f.write(
                 crypto.dump_certificate(crypto.FILETYPE_ASN1, cert)
             )
-        # create key in der format
+            f.close()
+        # create Key in der-Format
         with open("key.der", "wb") as f:
             f.write(
                 crypto.dump_privatekey(crypto.FILETYPE_ASN1, k)
             )
-
-        #create c header file for cert
+            f.close()
+        # create Header File for Cert
         cert_list = []
         with open('cert.der', 'rb') as f:
             for chunk in iter(lambda: f.read(1), b''):
                 cert_list.append("0x" + codecs.encode(chunk, 'hex').decode("utf-8"))
-            with open('cert.h', 'w') as tf:
-                tf.write("unsigned char AQM_crt_DER[] = {\n")
+            with open('cert.h', 'w') as cf:
+                cf.write("unsigned char AQM_crt_DER[] = {\n")
                 for i in range(0, len(cert_list)):
-                    tf.write("\t" + cert_list[i] + ",\n")
-                tf.write("};\n")
-                tf.write("unsigned int AQM_crt_DER_len = " + str(len(cert_list)) + ";")
-            
-        #create c header file for key
+                    cf.write("\t" + cert_list[i] + ",\n")
+                cf.write("};\n")
+                cf.write("unsigned int AQM_crt_DER_len = " + str(len(cert_list)) + ";")
+                cf.close()
+            f.close()
+        # create Header File for Key
         key_list = []
         with open('key.der', 'rb') as f:
             for chunk in iter(lambda: f.read(1), b''):
                 key_list.append("0x" + codecs.encode(chunk, 'hex').decode("utf-8"))
-            with open('key.h', 'w') as tf:
-                tf.write("unsigned char AQM_key_DER[] = {\n")
+            with open('key.h', 'w') as kf:
+                kf.write("unsigned char AQM_key_DER[] = {\n")
                 for i in range(0, len(key_list)):
-                    tf.write("\t" + key_list[i] + ",\n")
-                tf.write("};\n")
-                tf.write("unsigned int AQM_key_DER_len = " + str(len(key_list)) + ";")
+                    kf.write("\t" + key_list[i] + ",\n")
+                kf.write("};\n")
+                kf.write("unsigned int AQM_key_DER_len = " + str(len(key_list)) + ";")
+                kf.close()
+            f.close()
         os.remove("cert.der")
         os.remove("key.der")
+    
     def build(self):
-        print("Build")
-        print(platformio.VERSION)
         try:
-            releasePath = 'latest/software'
-            configPath = 'latest/software/platformio.ini'
-            if not os.path.isdir(releasePath + "/.pio"):
-                print("No .pio folder found, building firmware")
+            configPath = f"{self.base_release_path}platformio.ini"
+            if not os.path.isdir(self.base_release_path + ".pio"):
                 self.download()
                 self.createCert()
-                shutil.move(os.path.join("cert.h"), os.path.join("latest/software/include/", "cert.h"))
-                shutil.move(os.path.join("key.h"), os.path.join("latest/software/include/", "key.h"))
-                shutil.copy(os.path.join("Credentials.h"), os.path.join("latest/software/include/", "Credentials.h"))
-                worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
+                shutil.move(os.path.join("cert.h"), os.path.join(f"{self.base_release_path}include/", "cert.h"))
+                shutil.move(os.path.join("key.h"), os.path.join(f"{self.base_release_path}include/", "key.h"))
+                shutil.copy(os.path.join("Credentials.h"), os.path.join(f"{self.base_release_path}include/", "Credentials.h"))
+                worker = subprocess.run([
+                    "platformio", "run", 
+                    "-c", configPath, 
+                    "-d", self.base_release_path, 
+                    "--target", "upload"
+                    ],stdout=subprocess.PIPE)
             else:
-                print("Found .pio folder, skipping build, flashing firmware")
                 self.createCert()
-                shutil.move(os.path.join("cert.h"), os.path.join("latest/software/include/", "cert.h"))
-                shutil.move(os.path.join("key.h"), os.path.join("latest/software/include/", "key.h"))
-                shutil.copy(os.path.join("Credentials.h"), os.path.join("latest/software/include/", "Credentials.h"))
-                worker = subprocess.run(["platformio", "run", "-c", str(configPath), "-d", str(releasePath), "--target", "upload"], stdout=subprocess.PIPE)
+                shutil.move(os.path.join("cert.h"), os.path.join(f"{self.base_release_path}include/", "cert.h"))
+                shutil.move(os.path.join("key.h"), os.path.join(f"{self.base_release_path}include/", "key.h"))
+                shutil.copy(os.path.join("Credentials.h"), os.path.join(f"{self.base_release_path}include/", "Credentials.h"))
+                worker = subprocess.run(
+                    [
+                    "platformio", "run", 
+                    "-c", configPath,
+                    "-d", self.base_release_path, 
+                    "--target", "upload"
+                    ],stdout=subprocess.PIPE)
             print(worker.stdout.decode('utf-8'))
         except Exception as e:
             print("Build failed")
             print(e)
             return False
-        #shutil.rmtree("latest/") # delete release folder for next download
